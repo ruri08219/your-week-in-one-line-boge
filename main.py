@@ -16,11 +16,20 @@ def main():
         raise SystemExit(f"entry must be 1-100 characters, got {len(text)}")
     if "\n" in text or "\r" in text:
         raise SystemExit("entry must be a single line")
-    os.makedirs("/output", exist_ok=True)
-    with open("/output/entry.txt", "w", encoding="utf-8") as f:
-        f.write(text)
+    # The grader mounts /output; a local run may not have it writable, so
+    # fall back to ./output instead of failing the run outright.
+    try:
+        os.makedirs("/output", exist_ok=True)
+        out_path = "/output/entry.txt"
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(text)
+    except OSError:
+        os.makedirs("output", exist_ok=True)
+        out_path = "output/entry.txt"
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(text)
     # Guard: what the grader reads back must be byte-identical to the line.
-    with open("/output/entry.txt", "r", encoding="utf-8") as f:
+    with open(out_path, "r", encoding="utf-8") as f:
         written = f.read()
     if written != text:
         raise SystemExit("entry.txt round-trip mismatch")
